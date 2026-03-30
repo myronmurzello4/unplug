@@ -1,12 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const { ensureDefaultData } = require('./utils/seed');
 
 const app = express();
 let reconnectTimer = null;
+const projectRoot = path.join(__dirname, '..');
 
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
@@ -30,10 +32,6 @@ app.use(
   })
 );
 app.use(express.json({ limit: '1mb' }));
-
-app.get('/', (req, res) => {
-  res.send('Urban Oasis API is running');
-});
 
 app.get('/health', (req, res) => {
   const isDatabaseReady = mongoose.connection.readyState === 1;
@@ -62,6 +60,20 @@ app.use('/api/feed', require('./routes/feed'));
 app.use('/api/posts', require('./routes/posts'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/admin', require('./routes/admin'));
+
+app.use(express.static(projectRoot));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(projectRoot, 'index.html'));
+});
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+
+  return res.sendFile(path.join(projectRoot, 'index.html'));
+});
 
 app.use((req, res) => {
   res.status(404).json({ msg: 'Route not found' });
