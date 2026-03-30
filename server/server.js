@@ -9,6 +9,7 @@ const { ensureDefaultData } = require('./utils/seed');
 const app = express();
 let reconnectTimer = null;
 const projectRoot = path.join(__dirname, '..');
+const isDemoMode = process.env.DEMO_MODE === 'true';
 
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
@@ -43,6 +44,10 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api', (req, res, next) => {
+  if (isDemoMode) {
+    return next();
+  }
+
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({
       msg: 'Database unavailable. Start MongoDB on port 27017 or update MONGO_URI in server/.env.',
@@ -52,14 +57,18 @@ app.use('/api', (req, res, next) => {
   return next();
 });
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/cycles', require('./routes/cycles'));
-app.use('/api/events', require('./routes/earn'));
-app.use('/api/rewards', require('./routes/rewards'));
-app.use('/api/feed', require('./routes/feed'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/profile', require('./routes/profile'));
-app.use('/api/admin', require('./routes/admin'));
+if (isDemoMode) {
+  app.use(require('./routes/demo'));
+} else {
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/cycles', require('./routes/cycles'));
+  app.use('/api/events', require('./routes/earn'));
+  app.use('/api/rewards', require('./routes/rewards'));
+  app.use('/api/feed', require('./routes/feed'));
+  app.use('/api/posts', require('./routes/posts'));
+  app.use('/api/profile', require('./routes/profile'));
+  app.use('/api/admin', require('./routes/admin'));
+}
 
 app.use(express.static(projectRoot));
 
@@ -67,7 +76,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(projectRoot, 'index.html'));
 });
 
-app.get(/.*/, (req, res, next) => {
+app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
     return next();
   }
@@ -80,6 +89,11 @@ app.use((req, res) => {
 });
 
 async function connectDatabase() {
+  if (isDemoMode) {
+    console.log('Running in demo mode. MongoDB connection skipped.');
+    return;
+  }
+
   try {
     if (!process.env.MONGO_URI) {
       throw new Error('MONGO_URI is missing');
