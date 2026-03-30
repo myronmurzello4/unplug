@@ -8,7 +8,10 @@ const { ensureDefaultData } = require('./utils/seed');
 const app = express();
 let reconnectTimer = null;
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://127.0.0.1:5500,http://localhost:5500,http://localhost:3000')
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ||
+  'http://127.0.0.1:5500,http://localhost:5500,http://localhost:3000,https://myronmurzello4.github.io'
+)
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -16,7 +19,9 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://127.0.0.1:5500,http:
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const isGitHubPagesOrigin = typeof origin === 'string' && origin.endsWith('.github.io');
+
+      if (!origin || allowedOrigins.includes(origin) || isGitHubPagesOrigin) {
         return callback(null, true);
       }
 

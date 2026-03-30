@@ -1124,6 +1124,19 @@ const VEHICLES = [
   { icon: "flight", name: "Flight", co2: "255g CO₂/km", factor: 255, range: [100, 10000] },
 ];
 
+const urlParams = new URLSearchParams(window.location.search);
+const savedApiBase = window.localStorage.getItem("urban-oasis-api-base");
+const configuredApiBase = urlParams.get("apiBase");
+if (configuredApiBase) {
+  window.localStorage.setItem("urban-oasis-api-base", configuredApiBase);
+}
+const API_BASE = (configuredApiBase || savedApiBase || "http://localhost:5000").replace(/\/$/, "");
+const isGitHubPages = window.location.hostname.endsWith("github.io");
+const apiUrl = (path) => `${API_BASE}${path}`;
+const backendHelpMessage = isGitHubPages
+  ? `Unable to reach the backend at ${API_BASE}. GitHub Pages only hosts the frontend, so you still need to run the backend locally or deploy it separately.`
+  : `Unable to reach the backend at ${API_BASE}. Make sure the API is running and MongoDB is available.`;
+
 const Icon = ({ name, className = "" }) => <span className={`ms-icon ${className}`}>{name}</span>;
 
 function AuthScreen({ onLogin }) {
@@ -1136,7 +1149,7 @@ function AuthScreen({ onLogin }) {
     e.preventDefault();
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(apiUrl(endpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(isLogin ? { email, password } : { name, email, password })
@@ -1149,7 +1162,7 @@ function AuthScreen({ onLogin }) {
         alert(data.msg || 'Error occurred');
       }
     } catch(err) {
-      alert('Unable to reach the backend. Make sure the API is running on port 5000 and MongoDB is available.');
+      alert(backendHelpMessage);
     }
   };
 
@@ -1189,7 +1202,7 @@ function UrbanOasis() {
 
   // Refresh functions to update global state after an action
   const fetchUser = () => {
-    fetch('http://localhost:5000/api/auth/me', { headers: { 'x-auth-token': token } })
+    fetch(apiUrl('/api/auth/me'), { headers: { 'x-auth-token': token } })
       .then(r => r.json())
       .then(data => {
           if(data.msg) { setToken(null); localStorage.removeItem('token'); }
@@ -1198,13 +1211,13 @@ function UrbanOasis() {
   };
 
   const fetchFeed = () => {
-    fetch('http://localhost:5000/api/feed')
+    fetch(apiUrl('/api/feed'))
       .then(r => r.json())
       .then(setFeedList).catch(()=>{});
   };
 
   const fetchStands = () => {
-    fetch('http://localhost:5000/api/cycles/stands')
+    fetch(apiUrl('/api/cycles/stands'))
       .then(r => r.json())
       .then(setStandsList).catch(()=>{});
   };
@@ -1213,8 +1226,8 @@ function UrbanOasis() {
     if (token) {
       fetchUser();
       
-      fetch('http://localhost:5000/api/rewards').then(r=>r.json()).then(setRewardsList).catch(() => setRewardsList(REWARDS));
-      fetch('http://localhost:5000/api/events').then(r=>r.json()).then(setEventsList).catch(()=>{});
+      fetch(apiUrl('/api/rewards')).then(r=>r.json()).then(setRewardsList).catch(() => setRewardsList(REWARDS));
+      fetch(apiUrl('/api/events')).then(r=>r.json()).then(setEventsList).catch(()=>{});
       fetchStands();
       fetchFeed();
     }
@@ -1250,7 +1263,7 @@ function UrbanOasis() {
   const claimReward = async (r) => {
     if (credits < (r.pointsCost || r.pts)) { showToastMsg("Not enough credits! Keep earning 🌿"); return; }
     try {
-      const res = await fetch('http://localhost:5000/api/rewards/claim', {
+      const res = await fetch(apiUrl('/api/rewards/claim'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
         body: JSON.stringify({ rewardId: r._id })
@@ -1268,7 +1281,7 @@ function UrbanOasis() {
   const bookCycle = async (stand) => {
     if(stand.bikesAvailable <= 0) return;
     try {
-      const res = await fetch('http://localhost:5000/api/cycles/book', {
+      const res = await fetch(apiUrl('/api/cycles/book'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
         body: JSON.stringify({ standId: stand._id })
@@ -1286,7 +1299,7 @@ function UrbanOasis() {
 
   const scanCycle = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/cycles/scan', {
+      const res = await fetch(apiUrl('/api/cycles/scan'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
       });
@@ -1302,7 +1315,7 @@ function UrbanOasis() {
 
   const joinEvent = async (ev) => {
     try {
-      const res = await fetch('http://localhost:5000/api/events/join', {
+      const res = await fetch(apiUrl('/api/events/join'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
         body: JSON.stringify({ eventId: ev._id })
@@ -1320,7 +1333,7 @@ function UrbanOasis() {
 
   const uploadTreeProgress = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/events/tree-upload', {
+      const res = await fetch(apiUrl('/api/events/tree-upload'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
       });
