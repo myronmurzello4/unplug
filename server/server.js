@@ -6,6 +6,7 @@ require('dotenv').config();
 const { ensureDefaultData } = require('./utils/seed');
 
 const app = express();
+let reconnectTimer = null;
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://127.0.0.1:5500,http://localhost:5500,http://localhost:3000')
   .split(',')
@@ -29,6 +30,25 @@ app.get('/', (req, res) => {
   res.send('Urban Oasis API is running');
 });
 
+app.get('/health', (req, res) => {
+  const isDatabaseReady = mongoose.connection.readyState === 1;
+  res.status(isDatabaseReady ? 200 : 503).json({
+    status: isDatabaseReady ? 'ok' : 'degraded',
+    database: isDatabaseReady ? 'connected' : 'disconnected',
+    message: isDatabaseReady ? 'API and database are ready' : 'API is running but MongoDB is unavailable',
+  });
+});
+
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      msg: 'Database unavailable. Start MongoDB on port 27017 or update MONGO_URI in server/.env.',
+    });
+  }
+
+  return next();
+});
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/cycles', require('./routes/cycles'));
 app.use('/api/events', require('./routes/earn'));
@@ -42,23 +62,36 @@ app.use((req, res) => {
   res.status(404).json({ msg: 'Route not found' });
 });
 
-async function start() {
+async function connectDatabase() {
   try {
     if (!process.env.MONGO_URI) {
       throw new Error('MONGO_URI is missing');
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
-    await ensureDefaultData();
-
-    const port = process.env.PORT || 5000;
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
     });
+    await ensureDefaultData();
+    console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('Failed to start server:', error.message);
-    process.exit(1);
+    console.error('MongoDB connection failed:', error.message);
+
+    if (!reconnectTimer) {
+      reconnectTimer = setTimeout(async () => {
+        reconnectTimer = null;
+        await connectDatabase();
+      }, 10000);
+    }
   }
+}
+
+async function start() {
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+
+  await connectDatabase();
 }
 
 start();

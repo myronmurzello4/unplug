@@ -1149,7 +1149,7 @@ function AuthScreen({ onLogin }) {
         alert(data.msg || 'Error occurred');
       }
     } catch(err) {
-      alert('Server error. Is the backend running?');
+      alert('Unable to reach the backend. Make sure the API is running on port 5000 and MongoDB is available.');
     }
   };
 
