@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -11,7 +11,7 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
 const COLORS = {
   forest: "#1a3a2a",
@@ -28,11 +28,17 @@ const COLORS = {
 };
 
 const style = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
-  body { font-family: 'DM Sans', sans-serif; background: #f0f7f4; color: #1c1c1e; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background:
+      radial-gradient(circle at top right, rgba(116,198,157,0.22), transparent 28%),
+      linear-gradient(180deg, #f5fbf7 0%, #eef6f1 100%);
+    color: #1c1c1e;
+  }
 
   :root {
     --forest: #1a3a2a;
@@ -48,24 +54,64 @@ const style = `
 
   .app-shell {
     min-height: 100vh;
-    background: var(--mist);
+    background: transparent;
     position: relative;
     overflow-x: hidden;
   }
+  .app-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(244,185,66,0.10), transparent 20%),
+      radial-gradient(circle at 90% 5%, rgba(116,198,157,0.16), transparent 22%);
+    z-index: 0;
+  }
+  .pb-nav, .nav, .bottom-nav, .toast, .modal-overlay { position: relative; z-index: 1; }
+  .ms-icon {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1em;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    direction: ltr;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  }
+  .icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(116,198,157,0.18), rgba(244,185,66,0.18));
+    color: var(--forest);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22);
+    flex-shrink: 0;
+  }
+  .icon-badge .ms-icon { font-size: 20px; }
 
   /* NAV */
   .nav {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(26,58,42,0.97);
-    backdrop-filter: blur(12px);
+    background: rgba(14, 38, 27, 0.88);
+    backdrop-filter: blur(18px);
     padding: 0 24px;
-    height: 60px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(116,198,157,0.15);
+    border-bottom: 1px solid rgba(116,198,157,0.14);
+    box-shadow: 0 10px 30px rgba(13, 33, 24, 0.18);
   }
   .nav-logo {
     font-family: 'Playfair Display', serif;
@@ -100,12 +146,13 @@ const style = `
     align-items: center;
     gap: 8px;
     background: linear-gradient(135deg, #f4b942, #e67e22);
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 8px 14px;
+    border-radius: 999px;
     font-size: 13px;
     font-weight: 700;
     color: white;
     cursor: pointer;
+    box-shadow: 0 10px 24px rgba(230, 126, 34, 0.28);
   }
 
   /* HERO */
@@ -114,6 +161,8 @@ const style = `
     padding: 60px 24px 80px;
     position: relative;
     overflow: hidden;
+    display: grid;
+    gap: 28px;
   }
   .hero::before {
     content: '';
@@ -162,6 +211,11 @@ const style = `
     max-width: 360px;
     margin-bottom: 32px;
   }
+  .hero-grid {
+    display: grid;
+    gap: 28px;
+    align-items: end;
+  }
   .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn-primary {
     background: linear-gradient(135deg, var(--moss), var(--leaf));
@@ -174,6 +228,10 @@ const style = `
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 4px 20px rgba(45,106,79,0.4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(45,106,79,0.5); }
   .btn-ghost {
@@ -186,6 +244,10 @@ const style = `
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .btn-ghost:hover { border-color: var(--mint); background: rgba(116,198,157,0.08); }
 
@@ -213,6 +275,65 @@ const style = `
     letter-spacing: 0.8px;
     margin-top: 4px;
   }
+  .hero-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 28px;
+    padding: 22px;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.16);
+    backdrop-filter: blur(14px);
+    max-width: 420px;
+    justify-self: end;
+  }
+  .hero-panel-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .hero-panel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.72);
+  }
+  .hero-panel-balance {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    line-height: 1;
+    color: white;
+    margin-bottom: 8px;
+  }
+  .hero-panel-copy {
+    color: rgba(183,228,199,0.72);
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+  .hero-panel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .hero-metric {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 14px;
+  }
+  .hero-metric-label {
+    color: rgba(255,255,255,0.58);
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  .hero-metric-value {
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+  }
 
   /* SECTION */
   .section { padding: 40px 24px; }
@@ -222,7 +343,11 @@ const style = `
     font-weight: 700;
     color: var(--forest);
     margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
+  .section-title .ms-icon { font-size: 1em; }
   .section-sub {
     font-size: 13px;
     color: #666;
@@ -231,11 +356,12 @@ const style = `
 
   /* PROFILE CARD */
   .profile-card {
-    background: white;
+    background: rgba(255,255,255,0.92);
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(26,58,42,0.08);
+    box-shadow: 0 16px 40px rgba(26,58,42,0.10);
     margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.7);
   }
   .profile-header {
     background: linear-gradient(135deg, var(--forest), var(--leaf));
@@ -337,10 +463,10 @@ const style = `
   /* EARN CARDS */
   .earn-grid { display: flex; flex-direction: column; gap: 14px; }
   .earn-card {
-    background: white;
+    background: rgba(255,255,255,0.94);
     border-radius: 18px;
     padding: 20px;
-    box-shadow: 0 2px 16px rgba(26,58,42,0.06);
+    box-shadow: 0 16px 30px rgba(26,58,42,0.08);
     display: flex;
     align-items: flex-start;
     gap: 16px;
@@ -361,7 +487,7 @@ const style = `
   .earn-card.green::before { background: var(--moss); }
   .earn-card.gold::before { background: var(--gold); }
   .earn-card.blue::before { background: #4a90d9; }
-  .earn-card:hover { transform: translateX(4px); border-color: var(--dew); }
+  .earn-card:hover { transform: translateY(-4px); border-color: var(--dew); }
   .earn-icon {
     width: 48px; height: 48px;
     border-radius: 14px;
@@ -374,6 +500,7 @@ const style = `
   .earn-icon.green { background: rgba(64,145,108,0.1); }
   .earn-icon.gold { background: rgba(244,185,66,0.1); }
   .earn-icon.blue { background: rgba(74,144,217,0.1); }
+  .earn-icon .ms-icon { font-size: 24px; }
   .earn-info { flex: 1; }
   .earn-title { font-size: 15px; font-weight: 600; color: var(--forest); margin-bottom: 4px; }
   .earn-desc { font-size: 12px; color: #888; line-height: 1.5; margin-bottom: 10px; }
@@ -525,6 +652,7 @@ const style = `
     text-transform: uppercase;
   }
   .v-icon { font-size: 22px; }
+  .v-icon .ms-icon { font-size: 24px; }
   .v-info { flex: 1; }
   .v-name { font-size: 13px; font-weight: 600; }
   .v-co2 { font-size: 11px; color: rgba(183,228,199,0.6); margin-top: 2px; }
@@ -647,6 +775,7 @@ const style = `
   }
   .upload-zone:hover { border-color: var(--mint); color: var(--leaf); background: rgba(116,198,157,0.04); }
   .upload-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-icon .ms-icon { font-size: 32px; }
   .upload-btn {
     background: var(--leaf);
     color: white;
@@ -659,30 +788,36 @@ const style = `
     margin-top: 14px;
     width: 100%;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .upload-btn:hover { background: var(--forest); }
 
   /* ACTIVITY FEED */
   .feed { display: flex; flex-direction: column; gap: 10px; }
   .feed-item {
-    background: white;
+    background: rgba(255,255,255,0.92);
     border-radius: 14px;
     padding: 14px 16px;
     display: flex;
     align-items: center;
     gap: 14px;
-    box-shadow: 0 1px 8px rgba(26,58,42,0.05);
+    box-shadow: 0 12px 24px rgba(26,58,42,0.06);
+    border: 1px solid rgba(255,255,255,0.7);
   }
   .feed-icon {
     width: 40px; height: 40px;
     border-radius: 12px;
-    background: var(--mist);
+    background: linear-gradient(135deg, rgba(116,198,157,0.16), rgba(244,185,66,0.14));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    color: var(--forest);
     flex-shrink: 0;
   }
+  .feed-icon .ms-icon { font-size: 20px; }
   .feed-text { flex: 1; }
   .feed-title { font-size: 13px; font-weight: 600; color: var(--forest); }
   .feed-time { font-size: 11px; color: #bbb; margin-top: 2px; }
@@ -837,11 +972,14 @@ const style = `
   .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: white;
-    border-top: 1px solid #eee;
+    background: rgba(255,255,255,0.84);
+    backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(26,58,42,0.08);
     display: flex;
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding: 8px 12px calc(env(safe-area-inset-bottom, 0) + 8px);
+    gap: 8px;
+    box-shadow: 0 -18px 38px rgba(26,58,42,0.08);
   }
   .b-tab {
     flex: 1;
@@ -852,11 +990,16 @@ const style = `
     cursor: pointer;
     border: none;
     background: transparent;
+    border-radius: 18px;
     transition: all 0.2s;
-    color: #bbb;
+    color: #8da296;
   }
-  .b-tab.active { color: var(--moss); }
-  .b-tab-icon { font-size: 22px; margin-bottom: 3px; }
+  .b-tab.active {
+    color: var(--forest);
+    background: linear-gradient(135deg, rgba(116,198,157,0.20), rgba(244,185,66,0.12));
+  }
+  .b-tab-icon { font-size: 22px; margin-bottom: 3px; display: flex; }
+  .b-tab-icon .ms-icon { font-size: 22px; }
   .b-tab-label { font-size: 10px; font-weight: 500; }
   
   .pb-nav { padding-bottom: 80px; }
@@ -902,14 +1045,57 @@ const style = `
   }
   .tag.green { background: rgba(64,145,108,0.1); color: var(--moss); }
   .tag.gold { background: rgba(244,185,66,0.1); color: var(--amber); }
+
+  @media (min-width: 900px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
+    }
+  }
+
+  /* AUTH SCREEN */
+  .auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .auth-card {
+    background: white;
+    padding: 32px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 16px 40px rgba(26,58,42,0.1);
+  }
+  .auth-input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--dew);
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .auth-btn {
+    width: 100%;
+    background: var(--leaf);
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 `;
 
 const TABS = [
-  { id: "home", icon: "🏡", label: "Home" },
-  { id: "cycles", icon: "🚲", label: "Cycles" },
-  { id: "earn", icon: "🌿", label: "Earn" },
-  { id: "rewards", icon: "🎁", label: "Rewards" },
-  { id: "co2", icon: "🌍", label: "CO₂" },
+  { id: "home", icon: "home", label: "Home" },
+  { id: "cycles", icon: "pedal_bike", label: "Cycles" },
+  { id: "earn", icon: "park", label: "Earn" },
+  { id: "rewards", icon: "redeem", label: "Rewards" },
+  { id: "co2", icon: "public", label: "CO₂" },
 ];
 
 const REWARDS = [
@@ -922,25 +1108,121 @@ const REWARDS = [
 ];
 
 const FEED = [
-  { icon: "🌳", title: "Tree progress uploaded", time: "2h ago", pts: "+2 pts" },
-  { icon: "🚲", title: "Cycle ride — MG Road", time: "Yesterday", pts: "+1 pt" },
-  { icon: "🧹", title: "Joined Cleanup Drive", time: "3 days ago", pts: "+5 pts" },
-  { icon: "🌱", title: "Profile created", time: "1 week ago", pts: "+1 pt" },
+  { icon: "forest", title: "Tree progress uploaded", time: "2h ago", pts: "+2 pts" },
+  { icon: "pedal_bike", title: "Cycle ride — MG Road", time: "Yesterday", pts: "+1 pt" },
+  { icon: "mop", title: "Joined Cleanup Drive", time: "3 days ago", pts: "+5 pts" },
+  { icon: "person", title: "Profile created", time: "1 week ago", pts: "+1 pt" },
 ];
 
 const VEHICLES = [
-  { icon: "🚶", name: "Walk", co2: "0g CO₂/km", factor: 0, range: [0, 2] },
-  { icon: "🚲", name: "Cycle", co2: "0g CO₂/km", factor: 0, range: [0, 8] },
-  { icon: "🛵", name: "E-Scooter", co2: "12g CO₂/km", factor: 12, range: [2, 15] },
-  { icon: "🚌", name: "Bus", co2: "45g CO₂/km", factor: 45, range: [5, 100] },
-  { icon: "🚇", name: "Metro", co2: "28g CO₂/km", factor: 28, range: [3, 100] },
-  { icon: "🚗", name: "Car", co2: "192g CO₂/km", factor: 192, range: [0, 1000] },
-  { icon: "✈️", name: "Flight", co2: "255g CO₂/km", factor: 255, range: [100, 10000] },
+  { icon: "directions_walk", name: "Walk", co2: "0g CO₂/km", factor: 0, range: [0, 2] },
+  { icon: "pedal_bike", name: "Cycle", co2: "0g CO₂/km", factor: 0, range: [0, 8] },
+  { icon: "electric_scooter", name: "E-Scooter", co2: "12g CO₂/km", factor: 12, range: [2, 15] },
+  { icon: "directions_bus", name: "Bus", co2: "45g CO₂/km", factor: 45, range: [5, 100] },
+  { icon: "subway", name: "Metro", co2: "28g CO₂/km", factor: 28, range: [3, 100] },
+  { icon: "directions_car", name: "Car", co2: "192g CO₂/km", factor: 192, range: [0, 1000] },
+  { icon: "flight", name: "Flight", co2: "255g CO₂/km", factor: 255, range: [100, 10000] },
 ];
 
+const Icon = ({ name, className = "" }) => <span className={`ms-icon ${className}`}>{name}</span>;
+
+function AuthScreen({ onLogin }) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    try {
+      const res = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isLogin ? { email, password } : { name, email, password })
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        onLogin(data.token, data.user);
+      } else {
+        alert(data.msg || 'Error occurred');
+      }
+    } catch(err) {
+      alert('Server error. Is the backend running?');
+    }
+  };
+
+  return (
+    <>
+      <style>{style}</style>
+      <div className="app-shell auth-screen">
+        <div className="auth-card">
+          <h2 style={{fontFamily:"'Playfair Display', serif", color:"var(--forest)", marginBottom: 8}}>
+            {isLogin ? "Welcome Back to Urban Oasis" : "Join Urban Oasis"}
+          </h2>
+          <p style={{color: "#888", marginBottom: 24, fontSize: 13}}>
+            {isLogin ? "Log in to view your Green Wallet and rewards." : "Sign up to start earning Green Credits."}
+          </p>
+          <form onSubmit={handleSubmit}>
+            {!isLogin && <input className="auth-input" placeholder="Full Name" required value={name} onChange={e=>setName(e.target.value)} />}
+            <input className="auth-input" type="email" placeholder="Email Address" required value={email} onChange={e=>setEmail(e.target.value)} />
+            <input className="auth-input" type="password" placeholder="Password" required value={password} onChange={e=>setPassword(e.target.value)} />
+            <button type="submit" className="auth-btn">{isLogin ? "Log In" : "Sign Up"}</button>
+          </form>
+          <div style={{marginTop: 16, textAlign: "center", fontSize: 13, color: "var(--leaf)", cursor: "pointer"}} onClick={() => setIsLogin(!isLogin)}>
+            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function UrbanOasis() {
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [user, setUser] = useState(null);
+  const [rewardsList, setRewardsList] = useState([]);
+  const [eventsList, setEventsList] = useState([]);
+  const [standsList, setStandsList] = useState([]);
+  const [feedList, setFeedList] = useState([]); // Dynamic feed
+
+  // Refresh functions to update global state after an action
+  const fetchUser = () => {
+    fetch('http://localhost:5000/api/auth/me', { headers: { 'x-auth-token': token } })
+      .then(r => r.json())
+      .then(data => {
+          if(data.msg) { setToken(null); localStorage.removeItem('token'); }
+          else { setUser(data); setCredits(data.credits); setClaimedRewards(data.claimedRewards || []); }
+      }).catch(err => { console.log(err); });
+  };
+
+  const fetchFeed = () => {
+    fetch('http://localhost:5000/api/feed')
+      .then(r => r.json())
+      .then(setFeedList).catch(()=>{});
+  };
+
+  const fetchStands = () => {
+    fetch('http://localhost:5000/api/cycles/stands')
+      .then(r => r.json())
+      .then(setStandsList).catch(()=>{});
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchUser();
+      
+      fetch('http://localhost:5000/api/rewards').then(r=>r.json()).then(setRewardsList).catch(() => setRewardsList(REWARDS));
+      fetch('http://localhost:5000/api/events').then(r=>r.json()).then(setEventsList).catch(()=>{});
+      fetchStands();
+      fetchFeed();
+    }
+  }, [token]);
+
+
   const [activeTab, setActiveTab] = useState("home");
-  const [credits, setCredits] = useState(67);
+  const [credits, setCredits] = useState(0);
   const [showQR, setShowQR] = useState(false);
   const [toast, setToast] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -965,14 +1247,98 @@ function UrbanOasis() {
     setVehicleResults({ distance: d, best: bestVehicle.name, vehicles: VEHICLES.filter((v) => d >= v.range[0] && d <= v.range[1]) });
   };
 
-  const claimReward = (r) => {
-    if (credits < r.pts) { showToastMsg("Not enough credits! Keep earning 🌿"); return; }
-    setCredits((c) => c - r.pts);
-    setClaimedRewards((p) => [...p, r.name]);
-    showToastMsg(`🎉 ${r.name} claimed!`);
+  const claimReward = async (r) => {
+    if (credits < (r.pointsCost || r.pts)) { showToastMsg("Not enough credits! Keep earning 🌿"); return; }
+    try {
+      const res = await fetch('http://localhost:5000/api/rewards/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+        body: JSON.stringify({ rewardId: r._id })
+      });
+      const data = await res.json();
+      if(data.user) {
+        setCredits(data.user.credits);
+        setClaimedRewards(data.user.claimedRewards);
+        showToastMsg(`🎉 ${r.name} claimed!`);
+        fetchFeed();
+      } else { showToastMsg(data.msg); }
+    } catch(err) { showToastMsg('Error claiming. Try again.'); }
   };
 
-  const rewardCategories = ["All", ...new Set(REWARDS.map((r) => r.cat))];
+  const bookCycle = async (stand) => {
+    if(stand.bikesAvailable <= 0) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/cycles/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+        body: JSON.stringify({ standId: stand._id })
+      });
+      const data = await res.json();
+      if(data.stand) {
+         showToastMsg(`🚲 Booked at ${stand.name}!`);
+         fetchStands();
+         fetchFeed();
+      } else {
+         showToastMsg(data.msg);
+      }
+    } catch(err) { showToastMsg('Error booking cycle'); }
+  };
+
+  const scanCycle = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/cycles/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
+      });
+      const data = await res.json();
+      if(data.user && !data.msg.includes('Not')) {
+         showToastMsg(data.msg);
+         fetchUser();
+         fetchFeed();
+         setShowQR(false);
+      } else { showToastMsg(data.msg); }
+    } catch(err) { showToastMsg('Error scanning QR'); }
+  };
+
+  const joinEvent = async (ev) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/events/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+        body: JSON.stringify({ eventId: ev._id })
+      });
+      const data = await res.json();
+      if(data.user) {
+         showToastMsg(data.msg);
+         fetchUser();
+         fetchFeed();
+      } else {
+         showToastMsg(data.msg);
+      }
+    } catch(err) { showToastMsg('Error joining event'); }
+  };
+
+  const uploadTreeProgress = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/events/tree-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
+      });
+      const data = await res.json();
+      if(data.user) {
+         showToastMsg(data.msg);
+         fetchUser();
+         fetchFeed();
+      } else {
+         showToastMsg(data.msg);
+      }
+    } catch(err) { showToastMsg('Error uploading progress'); }
+  };
+  if (!token) return <AuthScreen onLogin={(t, u) => { setToken(t); setUser(u); setCredits(u.credits||0); setClaimedRewards(u.claimedRewards||[]); }} />;
+  if (!user) return <div style={{padding:40, textAlign:'center'}}>Loading... Ensure backend is running!</div>;
+
+
+  const rewardCategories = ["All", ...new Set((rewardsList.length > 0 ? rewardsList : REWARDS).map((r) => r.category || r.cat))];
 
   return (
     <>
@@ -980,9 +1346,12 @@ function UrbanOasis() {
       <div className="app-shell">
         {/* NAV */}
         <nav className="nav">
-          <div className="nav-logo">🌿 Urban<span>Oasis</span></div>
-          <div className="nav-credits" onClick={() => showToastMsg("🟡 " + credits + " Green Credits earned!")}>
-            🟡 {credits} pts
+          <div className="nav-logo">
+            <span className="icon-badge"><Icon name="eco" /></span>
+            Urban<span>Oasis</span>
+          </div>
+          <div className="nav-credits" onClick={() => showToastMsg("Balance: " + credits + " Green Credits")}>
+            <Icon name="stars" /> {credits} pts
           </div>
         </nav>
 
@@ -991,17 +1360,39 @@ function UrbanOasis() {
           {activeTab === "home" && (
             <>
               <div className="hero">
-                <div className="hero-label">🌎 Sustainability Rewards</div>
-                <h1>Go Green,<br /><em>Earn More.</em></h1>
-                <p>Ride cycles, plant trees, join clean-up drives — and earn Green Credits redeemable for real rewards.</p>
-                <div className="hero-btns">
-                  <button className="btn-primary" onClick={() => { showToastMsg("🌿 Welcome! +1 Green Credit added!"); setCredits((c) => c + 1); }}>Get Started Free</button>
-                  <button className="btn-ghost" onClick={() => setActiveTab("earn")}>How to Earn →</button>
-                </div>
-                <div className="hero-stats">
-                  <div className="stat-item"><div className="stat-num">12.4K</div><div className="stat-label">Members</div></div>
-                  <div className="stat-item"><div className="stat-num">3.2T</div><div className="stat-label">CO₂ Saved</div></div>
-                  <div className="stat-item"><div className="stat-num">840+</div><div className="stat-label">Cycle Stands</div></div>
+                <div className="hero-grid">
+                  <div>
+                    <div className="hero-label"><Icon name="globe" /> Sustainability Rewards</div>
+                    <h1>Go Green,<br /><em>Earn More.</em></h1>
+                    <p>Ride cycles, plant trees, join clean-up drives, and build a greener city with a cleaner, more premium rewards experience.</p>
+                    <div className="hero-btns">
+                      <button className="btn-primary" onClick={() => showToastMsg("Your Green Wallet is ready. Head to Earn to start collecting credits.")}>Get Started Free</button>
+                      <button className="btn-ghost" onClick={() => setActiveTab("earn")}>How to Earn</button>
+                    </div>
+                    <div className="hero-stats">
+                      <div className="stat-item"><div className="stat-num">12.4K</div><div className="stat-label">Members</div></div>
+                      <div className="stat-item"><div className="stat-num">3.2T</div><div className="stat-label">CO₂ Saved</div></div>
+                      <div className="stat-item"><div className="stat-num">840+</div><div className="stat-label">Cycle Stands</div></div>
+                    </div>
+                  </div>
+                  <div className="hero-panel">
+                    <div className="hero-panel-top">
+                      <div className="hero-panel-tag"><Icon name="monitoring" /> Live Green Wallet</div>
+                      <span className="tag gold">Ready to earn</span>
+                    </div>
+                    <div className="hero-panel-balance">{credits}</div>
+                    <div className="hero-panel-copy">Your account now starts at zero points, so users clearly see progress from their very first eco action.</div>
+                    <div className="hero-panel-grid">
+                      <div className="hero-metric">
+                        <div className="hero-metric-label">Next reward</div>
+                        <div className="hero-metric-value">100 pts</div>
+                      </div>
+                      <div className="hero-metric">
+                        <div className="hero-metric-label">Fastest earn</div>
+                        <div className="hero-metric-value">Cycle ride</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1010,9 +1401,9 @@ function UrbanOasis() {
                 <div className="section-sub">Level up your green journey</div>
                 <div className="profile-card">
                   <div className="profile-header">
-                    <div className="profile-avatar-ring">R</div>
-                    <div className="profile-name">Royce Mendes</div>
-                    <div className="profile-handle">@royce.green · Member since 2025</div>
+                    <div className="profile-avatar-ring">{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
+                    <div className="profile-name">{user.name}</div>
+                    <div className="profile-handle">@{user.name ? user.name.split(' ')[0].toLowerCase() : 'user'}.green · Member since 2025</div>
                     <div className="profile-badge">🌿 Eco Warrior</div>
                   </div>
                   <div className="profile-body">
@@ -1020,7 +1411,7 @@ function UrbanOasis() {
                       <div className="credit-row">
                         <div>
                           <div className="credit-label">Green Credits</div>
-                          <div className="credit-num">🟡 {credits}</div>
+                          <div className="credit-num">{credits}</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
                           <div className="credit-label">Next Reward</div>
@@ -1036,26 +1427,29 @@ function UrbanOasis() {
                       </div>
                     </div>
                     <div className="profile-stats">
-                      <div className="p-stat"><div className="p-stat-num">4</div><div className="p-stat-l">Rides</div></div>
-                      <div className="p-stat"><div className="p-stat-num">2</div><div className="p-stat-l">Trees</div></div>
-                      <div className="p-stat"><div className="p-stat-num">1</div><div className="p-stat-l">Events</div></div>
+                      <div className="p-stat"><div className="p-stat-num">{user.ridesCount || 0}</div><div className="p-stat-l">Rides</div></div>
+                      <div className="p-stat"><div className="p-stat-num">{user.treesCount || 0}</div><div className="p-stat-l">Trees</div></div>
+                      <div className="p-stat"><div className="p-stat-num">{user.eventsCount || 0}</div><div className="p-stat-l">Events</div></div>
                     </div>
                   </div>
                 </div>
 
-                <div className="section-title">Recent Activity</div>
-                <div className="section-sub" style={{ marginBottom: 16 }}>Your green footprint</div>
+                <div className="section-title">Public Activity Feed</div>
+                <div className="section-sub" style={{ marginBottom: 16 }}>See community footprint</div>
                 <div className="feed">
-                  {FEED.map((f, i) => (
-                    <div className="feed-item" key={i}>
-                      <div className="feed-icon">{f.icon}</div>
-                      <div className="feed-text">
-                        <div className="feed-title">{f.title}</div>
-                        <div className="feed-time">{f.time}</div>
+                  {feedList.length > 0 ? feedList.map((f, i) => {
+                    const timeAgo = new Date(f.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+                    return (
+                      <div className="feed-item" key={i}>
+                        <div className="feed-icon"><Icon name={f.icon || "stars"} /></div>
+                        <div className="feed-text">
+                          <div className="feed-title">{f.userName} {f.description.toLowerCase()}</div>
+                          <div className="feed-time">{timeAgo}</div>
+                        </div>
+                        <div className="feed-pts" style={{ color: f.pointsEarned?.includes('-') ? '#e67e22' : 'var(--leaf)' }}>{f.pointsEarned}</div>
                       </div>
-                      <div className="feed-pts">{f.pts}</div>
-                    </div>
-                  ))}
+                    );
+                  }) : <div style={{textAlign: "center", color: "#888", fontSize: 13}}>No recent activity found. Connect backend!</div>}
                 </div>
               </div>
             </>
@@ -1064,7 +1458,7 @@ function UrbanOasis() {
           {/* CYCLES TAB */}
           {activeTab === "cycles" && (
             <div className="section">
-              <div className="section-title">🚲 Cycle Booking</div>
+              <div className="section-title"><Icon name="pedal_bike" /> Cycle Booking</div>
               <div className="section-sub">Find stands near you and book a ride</div>
 
               <div className="cycle-map-placeholder">
@@ -1078,35 +1472,34 @@ function UrbanOasis() {
                 <div className="section-title" style={{ fontSize: 18 }}>Nearby Stands</div>
               </div>
               <div className="cycle-stands">
-                {[
-                  { name: "MG Road Station", dist: "0.3 km", bikes: 4, total: 6 },
-                  { name: "Indiranagar Hub", dist: "0.8 km", bikes: 0, total: 8 },
-                  { name: "Koramangala Loop", dist: "1.2 km", bikes: 2, total: 5 },
-                  { name: "BTM Junction", dist: "1.9 km", bikes: 7, total: 10 },
-                ].map((s, i) => (
+                {(standsList.length > 0 ? standsList : [
+                  { name: "MG Road Station", distanceText: "0.3 km", bikesAvailable: 4, totalBikes: 6 },
+                  { name: "Indiranagar Hub", distanceText: "0.8 km", bikesAvailable: 0, totalBikes: 8 },
+                  { name: "Koramangala Loop", distanceText: "1.2 km", bikesAvailable: 2, totalBikes: 5 },
+                ]).map((s, i) => (
                   <div className="stand-row" key={i}>
-                    <div className={`stand-dot ${s.bikes === 0 ? "busy" : ""}`} />
+                    <div className={`stand-dot ${ (s.bikesAvailable!==undefined?s.bikesAvailable:s.bikes) === 0 ? "busy" : "" }`} />
                     <div className="stand-info">
                       <div className="stand-name">{s.name}</div>
-                      <div className="stand-meta">{s.dist} · {s.bikes}/{s.total} bikes available</div>
+                      <div className="stand-meta">{s.distanceText || s.dist} · {s.bikesAvailable!==undefined?s.bikesAvailable:s.bikes}/{s.totalBikes} bikes available</div>
                     </div>
                     <button
-                      className={`stand-book ${s.bikes === 0 ? "full" : ""}`}
-                      onClick={() => s.bikes > 0 && showToastMsg(`🚲 Booked at ${s.name}!`)}
+                      className={`stand-book ${ (s.bikesAvailable!==undefined?s.bikesAvailable:s.bikes) === 0 ? "full" : "" }`}
+                      onClick={() => bookCycle(s)}
                     >
-                      {s.bikes === 0 ? "Full" : "Book"}
+                      { (s.bikesAvailable!==undefined?s.bikesAvailable:s.bikes) === 0 ? "Full" : "Book"}
                     </button>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: 24, background: "white", borderRadius: 18, padding: 20, boxShadow: "0 2px 16px rgba(26,58,42,0.07)" }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--forest)", marginBottom: 8 }}>🔒 Lock & Earn</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--forest)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}><Icon name="lock" /> Lock & Earn</div>
                 <div style={{ fontSize: 13, color: "#888", marginBottom: 16, lineHeight: 1.6 }}>
                   After reaching your destination, lock your cycle at the nearest stand. Scan the QR code on the stand screen to instantly claim your Green Credit.
                 </div>
                 <button className="btn-primary" style={{ width: "100%" }} onClick={() => setShowQR(true)}>
-                  📷 Scan Stand QR Code
+                  <Icon name="qr_code_scanner" /> Scan Stand QR Code
                 </button>
               </div>
             </div>
@@ -1119,24 +1512,24 @@ function UrbanOasis() {
               <div className="section-sub">Every green action rewards you</div>
               <div className="earn-grid">
                 {[
-                  { color: "green", icon: "🌳", title: "Plant a Tree", desc: "Plant a tree near your area and upload progress every 5 days to earn recurring credits.", pts: "+2 pts / 5 days", action: () => showToastMsg("Scroll down to Tree Progress Upload below.") },
-                  { color: "gold", icon: "🚲", title: "Ride a Cycle", desc: "Book an Urban Oasis cycle from any stand and lock it at your destination.", pts: "+1 pt per ride", action: () => setActiveTab("cycles") },
-                  { color: "blue", icon: "🧹", title: "Clean-up Drives", desc: "Join community clean-up drives and tree plantation events organized near you.", pts: "+5 pts per event", action: () => showToastMsg("Scroll down to Upcoming Events below.") },
-                  { color: "green", icon: "👤", title: "Create Profile", desc: "Sign up and complete your Urban Oasis profile to kick off your green journey.", pts: "+1 pt on signup", action: () => showToastMsg("🌿 Already earned!") },
+                  { color: "green", icon: "forest", title: "Plant a Tree", desc: "Plant a tree near your area and upload progress every 5 days to earn recurring credits.", pts: "+2 pts / 5 days", action: () => showToastMsg("Scroll down to Tree Progress Upload below.") },
+                  { color: "gold", icon: "pedal_bike", title: "Ride a Cycle", desc: "Book an Urban Oasis cycle from any stand and lock it at your destination.", pts: "+1 pt per ride", action: () => setActiveTab("cycles") },
+                  { color: "blue", icon: "mop", title: "Clean-up Drives", desc: "Join community clean-up drives and tree plantation events organized near you.", pts: "+5 pts per event", action: () => showToastMsg("Scroll down to Upcoming Events below.") },
+                  { color: "green", icon: "person", title: "Create Profile", desc: "Sign up and complete your Urban Oasis profile to kick off your green journey.", pts: "+1 pt on signup", action: () => showToastMsg("Already earned.") },
                 ].map((e, i) => (
                   <div className={`earn-card ${e.color}`} key={i} onClick={e.action}>
-                    <div className={`earn-icon ${e.color}`}>{e.icon}</div>
+                    <div className={`earn-icon ${e.color}`}><Icon name={e.icon} /></div>
                     <div className="earn-info">
                       <div className="earn-title">{e.title}</div>
                       <div className="earn-desc">{e.desc}</div>
-                      <span className="earn-pts">🟡 {e.pts}</span>
+                      <span className="earn-pts"><Icon name="stars" /> {e.pts}</span>
                     </div>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: 28 }}>
-                <div className="section-title" style={{ fontSize: 20 }}>🌿 Tree Progress Upload</div>
+                <div className="section-title" style={{ fontSize: 20 }}><Icon name="photo_camera" /> Tree Progress Upload</div>
                 <div className="section-sub">Share your tree's growth every 5 days</div>
                 <div className="tree-upload-card">
                   <div className="tree-header">
@@ -1153,23 +1546,20 @@ function UrbanOasis() {
                     ))}
                   </div>
                   <div className="upload-zone" onClick={() => showToastMsg("📸 Upload feature — attach your photo!")}>
-                    <div className="upload-icon">📸</div>
+                    <div className="upload-icon"><Icon name="upload" /></div>
                     <div>Tap to upload today's progress photo</div>
                     <div style={{ fontSize: 11, marginTop: 4 }}>+2 Green Credits on approval</div>
                   </div>
-                  <button className="upload-btn" onClick={() => { showToastMsg("🌳 Progress submitted! +2 credits pending"); setCredits((c) => c + 2); }}>
+                  <button className="upload-btn" onClick={() => uploadTreeProgress()}>
                     Submit Progress → Earn +2 Credits
                   </button>
                 </div>
               </div>
 
               <div style={{ marginTop: 8 }}>
-                <div className="section-title" style={{ fontSize: 20 }}>📅 Upcoming Events</div>
+                <div className="section-title" style={{ fontSize: 20 }}><Icon name="event" /> Upcoming Events</div>
                 <div className="section-sub">Join drives near you</div>
-                {[
-                  { type: "plantation", emo: "🌳", title: "Cubbon Park Tree Drive", org: "by GreenBengaluru", date: "Mar 30", time: "7:00 AM", loc: "Cubbon Park Gate", pts: 5 },
-                  { type: "cleanup", emo: "🧹", title: "Bellandur Lake Cleanup", org: "by CleanLakes India", date: "Apr 2", time: "6:30 AM", loc: "Bellandur Ext Road", pts: 5 },
-                ].map((ev, i) => (
+                {(eventsList.length > 0 ? eventsList : []).map((ev, i) => (
                   <div className="event-card" key={i}>
                     <div className={`event-banner ${ev.type}`}>
                       <div className="event-emo">{ev.emo}</div>
@@ -1184,7 +1574,7 @@ function UrbanOasis() {
                         <div className="event-chip">🕐 {ev.time}</div>
                         <div className="event-chip">📍 {ev.loc}</div>
                       </div>
-                      <button className="event-join" onClick={() => { showToastMsg(`🎉 Joined! +${ev.pts} credits on attendance`); setCredits((c) => c + ev.pts); }}>
+                      <button className="event-join" onClick={() => joinEvent(ev)}>
                         Join & Earn 🟡 +{ev.pts} Credits
                       </button>
                     </div>
@@ -1197,13 +1587,13 @@ function UrbanOasis() {
           {/* REWARDS TAB */}
           {activeTab === "rewards" && (
             <div className="section">
-              <div className="section-title">🎁 Rewards Store</div>
+              <div className="section-title"><Icon name="redeem" /> Rewards Store</div>
               <div className="section-sub">Trade your Green Credits for real perks</div>
 
               <div style={{ background: "linear-gradient(135deg, #1a3a2a, #2d6a4f)", borderRadius: 18, padding: "18px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontSize: 11, color: "rgba(183,228,199,0.6)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Your Balance</div>
-                  <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 34, fontWeight: 900, color: "#f4b942" }}>🟡 {credits}</div>
+                  <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 34, fontWeight: 900, color: "#f4b942" }}>{credits}</div>
                   <div style={{ fontSize: 12, color: "rgba(183,228,199,0.6)", marginTop: 2 }}>Green Credits</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -1219,22 +1609,24 @@ function UrbanOasis() {
               </div>
 
               <div className="rewards-grid">
-                {REWARDS.filter((r) => rewardFilter === "All" || r.cat === rewardFilter).map((r, i) => {
-                  const canClaim = credits >= r.pts && !claimedRewards.includes(r.name);
+                { (rewardsList.length > 0 ? rewardsList : REWARDS).filter((r) => rewardFilter === "All" || (r.category||r.cat) === rewardFilter).map((r, i) => {
+                  const rewardCost = r.pointsCost || r.pts;
+                  const rewardBackground = r.bg || r.bgCode;
+                  const canClaim = credits >= rewardCost && !claimedRewards.includes(r.name);
                   const claimed = claimedRewards.includes(r.name);
                   return (
                     <div className="reward-card" key={i}>
-                      <div className="reward-img" style={{ background: r.bg }}>{r.emoji}</div>
+                      <div className="reward-img" style={{ background: rewardBackground }}>{r.emoji}</div>
                       <div className="reward-body">
                         <div className="reward-name">{r.name}</div>
-                        <div className="reward-pts">🟡 {r.pts} pts</div>
+                        <div className="reward-pts">🟡 {rewardCost} pts</div>
                         <button
                           className={`reward-claim ${!canClaim && !claimed ? "locked" : ""}`}
                           onClick={() => !claimed && claimReward(r)}
                         >
-                          {claimed ? "✅ Claimed" : canClaim ? "Claim Now" : `Need ${r.pts} pts`}
+                          {claimed ? "✅ Claimed" : canClaim ? "Claim Now" : `Need ${rewardCost} pts`}
                         </button>
-                        {!canClaim && !claimed && <div className="reward-lock">{r.pts - credits} more to go</div>}
+                        {!canClaim && !claimed && <div className="reward-lock">{rewardCost - credits} more to go</div>}
                       </div>
                     </div>
                   );
@@ -1246,7 +1638,7 @@ function UrbanOasis() {
           {/* CO2 TAB */}
           {activeTab === "co2" && (
             <div className="section">
-              <div className="section-title">🌍 CO₂ Tracker</div>
+              <div className="section-title"><Icon name="public" /> CO₂ Tracker</div>
               <div className="section-sub">Choose the greener way to travel</div>
 
               <div className="co2-card">
@@ -1272,7 +1664,7 @@ function UrbanOasis() {
                       const saved = carCO2 - thisCO2;
                       return (
                         <div className={`vehicle-row ${isBest ? "best" : ""}`} key={i} onClick={() => isBest && showToastMsg(`🌿 Best choice! Save ${saved}g CO₂ vs driving.`)}>
-                          <div className="v-icon">{v.icon}</div>
+                          <div className="v-icon"><Icon name={v.icon} /></div>
                           <div className="v-info">
                             <div className="v-name">{v.name}</div>
                             <div className="v-co2">{v.factor === 0 ? "Zero emissions 🌿" : `${(v.factor * vehicleResults.distance).toFixed(0)}g CO₂ total`}</div>
@@ -1331,11 +1723,11 @@ function UrbanOasis() {
               <div className="modal-title">Claim Your Credit 🟡</div>
               <div className="modal-sub">Scan the QR code on the cycle stand screen to lock your cycle and earn your Green Credit.</div>
               <div className="qr-box">
-                <div className="qr-icon">📷</div>
+                <div className="qr-icon"><Icon name="qr_code_scanner" /></div>
                 <div className="qr-text">Point your camera at the stand screen QR code</div>
                 <div style={{ marginTop: 12, fontSize: 28 }}>▪▪▪<br />▪ ▪<br />▪▪▪</div>
               </div>
-              <button className="modal-confirm" onClick={() => { setShowQR(false); setCredits((c) => c + 1); showToastMsg("🔒 Cycle locked! +1 Green Credit earned 🟡"); }}>
+              <button className="modal-confirm" onClick={scanCycle}>
                 ✅ Simulate Scan & Claim +1 Credit
               </button>
               <button className="modal-cancel" onClick={() => setShowQR(false)}>Cancel</button>
@@ -1350,7 +1742,7 @@ function UrbanOasis() {
         <nav className="bottom-nav">
           {TABS.map((t) => (
             <button key={t.id} className={`b-tab ${activeTab === t.id ? "active" : ""}`} onClick={() => setActiveTab(t.id)}>
-              <div className="b-tab-icon">{t.icon}</div>
+              <div className="b-tab-icon"><Icon name={t.icon} /></div>
               <div className="b-tab-label">{t.label}</div>
             </button>
           ))}
@@ -1364,3 +1756,5 @@ root.render(<UrbanOasis />);
   </script>
 </body>
 </html>
+
+
